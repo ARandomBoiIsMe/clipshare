@@ -47,13 +47,17 @@ def get_broadcast_address(ip_address, subnet_mask):
     return broadcast_address
 
 def listen(broadcast_address, port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('0.0.0.0', port))
 
     print("Ready to receive data...")
 
     while True:
-        data_size = struct.unpack("L", sock.recv(struct.calcsize("L")))[0]
+        try:
+            data_size = struct.unpack("L", sock.recv(struct.calcsize("L")))[0]
+        except OSError as e:
+            print(f"Error receiving data: {e}")
+            continue
 
         received_data = b""
         while len(received_data) < data_size:
@@ -65,7 +69,7 @@ def listen(broadcast_address, port):
         print(f"Received: {message}")
 
 def send(broadcast_address):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     print("Ready to send data...")

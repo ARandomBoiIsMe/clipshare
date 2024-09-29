@@ -6,7 +6,7 @@ A program for sharing data between clipboards on multiple devices.
 
 ### Windows
 
-None. Just run the program.
+None. Just make sure you have [python](https://www.python.org/downloads/) installed before running the program.
 
 ### Linux
 
@@ -16,6 +16,8 @@ Install the `xclip` program to allow access to the clipboard:
 sudo apt install xclip
 ```
 
+Make sure you have [python](https://www.python.org/downloads/) installed before running the program.
+
 ### Android
 
 - Download and install [Termux](https://termux.dev/en/)
@@ -24,6 +26,12 @@ sudo apt install xclip
 
 ```
 pkg install termux-api
+```
+
+- Install Python:
+
+```
+pkg install python
 ```
 
 ## Usage

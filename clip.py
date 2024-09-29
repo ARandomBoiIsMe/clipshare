@@ -2,6 +2,9 @@ import time
 import platform
 import subprocess
 
+# To avoid sending back items that were sent from another device
+last_sent_item = None
+
 # https://stackoverflow.com/a/62517779
 
 def __get_most_recent_clipboard_item(sys):
@@ -47,11 +50,17 @@ def __get_most_recent_clipboard_item(sys):
         )
 
 def wait_for_new_clipboard_addition(sys):
+    global last_sent_item
+
     last_addition = __get_most_recent_clipboard_item(sys)
 
     while True:
         current_addition = __get_most_recent_clipboard_item(sys)
         if current_addition == last_addition:
+            time.sleep(0.5)
+            continue
+
+        if current_addition == last_sent_item:
             time.sleep(0.5)
             continue
 
@@ -110,6 +119,8 @@ def __set_most_recent_clipboard_item(sys, item):
         )
 
 def save_to_clipboard(item):
+    global last_sent_item
     plat = platform.system().lower()
 
     __set_most_recent_clipboard_item(plat, item)
+    last_sent_item = item

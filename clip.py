@@ -69,7 +69,7 @@ def get_from_clipboard():
 def __set_most_recent_clipboard_item(sys, item):
     if sys == "windows":
         return subprocess.run(
-            args=["echo", item, "|" ,"powershell", "clip"],
+            args=["powershell", "Set-Clipboard", "-Value", item],
             capture_output=True,
             text=True
         )
@@ -77,7 +77,8 @@ def __set_most_recent_clipboard_item(sys, item):
         # Linux on PC
         try:
             return subprocess.run(
-                args=["echo", item, "|" ,"xclip", "-sel", "clip"],
+                args=["xclip", "-sel", "clip"],
+                input=item,
                 capture_output=True,
                 text=True,
                 check=True

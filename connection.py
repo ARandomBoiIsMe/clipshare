@@ -26,7 +26,7 @@ def get_port():
                 port += 1
 
                 if port > 1034:
-                    raise ValueError("program can only listen on ports 1024 to 1034")
+                    raise ValueError("Program can only listen on ports 1024 to 1034")
 
                 continue
             except Exception as err:
@@ -40,27 +40,31 @@ def get_broadcast_address(ip_address, subnet_mask):
 
     return broadcast_address
 
-def listen(port):
+def listen(ip_address, port):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65507)
         sock.bind(('0.0.0.0', port))
 
         print("Ready to receive data...")
 
         while True:
             try:
-                data_size = struct.unpack("L", sock.recv(struct.calcsize("L")))[0]
+                received_data, addr = sock.recvfrom(65507)
+
+                if addr[0] == '127.0.0.1' or addr[0] == ip_address:
+                    continue
+
+                message = received_data.decode()
+
+                clip.save_to_clipboard(message)
+                print(f"Received: {message}")
             except OSError as e:
                 print(f"Error receiving data: {e}")
                 continue
 
-            received_data = sock.recv(data_size)
-            message = received_data.decode()
-
-            clip.save_to_clipboard(message)
-            print(f"Received: {message}")
-
 def send(broadcast_address):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65507)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         print("Ready to send data...")
@@ -68,15 +72,9 @@ def send(broadcast_address):
         while True:
             message = clip.get_from_clipboard()
 
-            port = 1024
-            while True:
-                if port > 1034:
-                    break
+            data = message.encode()
 
-                data = message.encode()
-                message_size = struct.pack("L", len(data))
-
-                sock.sendto(message_size + data, (broadcast_address, port))
-                port += 1
+            for port in range(1024, 1035):
+                sock.sendto(data, (broadcast_address, port))
 
             print(f"Sent: {message}")

@@ -6,6 +6,8 @@ A program for sharing data between clipboards on multiple devices.
 
 ### Networking
 
+Ensure the devices are on the same network. E.g. Connected to the same WiFi, sharing the same hotspot, etc.
+
 To ensure proper communication between devices, you'll need to configure the subnet mask. Below is the configuration format:
 
 ```

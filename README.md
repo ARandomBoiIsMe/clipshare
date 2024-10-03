@@ -2,8 +2,8 @@
 
 A program for sharing data between clipboards on multiple devices.
 
-![clipshare running on my laptop](clipshare_laptop.mp4)
-![clipshare running on my phone](clipshare_phone.mp4)
+![clipshare on my laptop](media/clipshare_laptop.jpeg)
+![clipshare on my phone](media/clipshare_android.jpeg)
 
 ## Configuration
 

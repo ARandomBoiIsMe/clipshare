@@ -2,6 +2,9 @@
 
 A program for sharing data between clipboards on multiple devices.
 
+![clipshare running on my laptop](clipshare_laptop.mp4)
+![clipshare running on my phone](clipshare_phone.mp4)
+
 ## Configuration
 
 ### Networking

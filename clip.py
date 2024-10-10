@@ -1,41 +1,52 @@
-import time
+import asyncio
 import platform
-import subprocess
 
 # To avoid sending back items that were sent from another device
 last_sent_item = None
 
 # https://stackoverflow.com/a/62517779
 
-def __get_most_recent_clipboard_item(sys):
+async def __get_most_recent_clipboard_item(sys):
     if sys == "windows":
-        return subprocess.run(
-            args=["powershell", "Get-Clipboard"],
-            capture_output=True,
-            text=True
-        ).stdout.strip()
+        proc = await asyncio.create_subprocess_exec(
+            "powershell",
+            "-Command", "Get-Clipboard",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await proc.communicate()
+
+        return stdout.decode().strip()
     elif sys == "linux":
         # Linux on PC
-        try:
-            return subprocess.run(
-                args=["xclip", "-sel", "clip", "-o"],
-                capture_output=True,
-                text=True,
-                check=True
-            ).stdout.strip()
-        except subprocess.CalledProcessError:
+        proc = await asyncio.create_subprocess_exec(
+            "xclip",
+            "-sel", "clip", "-o",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await proc.communicate()
+
+        if stderr:
             pass
+        elif stdout:
+            return stdout.decode().strip()
 
         # Termux on Android
-        try:
-            return subprocess.run(
-                args=["termux-clipboard-get"],
-                capture_output=True,
-                text=True,
-                check=True
-            ).stdout.strip()
-        except subprocess.CalledProcessError:
+        proc = await asyncio.create_subprocess_exec(
+            "termux-clipboard-get",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await proc.communicate()
+
+        if stderr:
             pass
+        elif stdout:
+            return stdout.decode().strip()
 
         raise ValueError(
             "This program cannot work without xclip or termux available on the target device \
@@ -49,61 +60,65 @@ def __get_most_recent_clipboard_item(sys):
             https://github.com/ARandomBoiIsMe/clipshare/issues"
         )
 
-def wait_for_new_clipboard_addition(sys):
+async def wait_for_new_clipboard_addition(sys):
     global last_sent_item
 
-    last_addition = __get_most_recent_clipboard_item(sys)
+    last_addition = await __get_most_recent_clipboard_item(sys)
 
     while True:
-        current_addition = __get_most_recent_clipboard_item(sys)
+        current_addition = await __get_most_recent_clipboard_item(sys)
         if current_addition == last_addition:
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             continue
 
         if current_addition == last_sent_item:
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             continue
 
         if type(current_addition) != str:
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             continue
 
         return current_addition
 
-def get_from_clipboard():
+async def get_from_clipboard():
     plat = platform.system().lower()
 
-    return wait_for_new_clipboard_addition(plat)
+    return await wait_for_new_clipboard_addition(plat)
 
-def __set_most_recent_clipboard_item(sys, item):
+async def __set_most_recent_clipboard_item(sys, item):
     if sys == "windows":
-        return subprocess.run(
-            args=["powershell", "Set-Clipboard", "-Value", item],
-            capture_output=True,
-            text=True
+        proc = await asyncio.create_subprocess_exec(
+            "powershell",
+            "Set-Clipboard", "-Value", f"{item}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
         )
+
+        await proc.communicate()
     elif sys == "linux":
         # Linux on PC
-        try:
-            return subprocess.run(
-                args=["xclip", "-sel", "clip"],
-                input=item,
-                capture_output=True,
-                text=True,
-                check=True
-            )
-        except subprocess.CalledProcessError:
+        proc = await asyncio.create_subprocess_exec(
+            "xclip",
+            "-sel", "clip",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await proc.communicate(input=item.encode())
+        if stderr:
             pass
 
         # Termux on Android
-        try:
-            return subprocess.run(
-                args=["termux-clipboard-set", item],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-        except subprocess.CalledProcessError:
+        proc = await asyncio.create_subprocess_exec(
+            "termux-clipboard-set",
+            f"{item}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await proc.communicate()
+        if stderr:
             pass
 
         raise ValueError(
@@ -118,9 +133,9 @@ def __set_most_recent_clipboard_item(sys, item):
             https://github.com/ARandomBoiIsMe/clipshare/issues"
         )
 
-def save_to_clipboard(item):
+async def save_to_clipboard(item):
     global last_sent_item
     plat = platform.system().lower()
 
-    __set_most_recent_clipboard_item(plat, item)
+    await __set_most_recent_clipboard_item(plat, item)
     last_sent_item = item

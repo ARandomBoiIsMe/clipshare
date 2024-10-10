@@ -1,4 +1,4 @@
-import threading
+import asyncio
 
 import config
 import connection
@@ -10,11 +10,11 @@ IP_ADDRESS = connection.get_ip_address()
 PORT = connection.get_port()
 BROADCAST_ADDRESS = connection.get_broadcast_address(IP_ADDRESS, SUBNET_MASK)
 
-def main():
-    threading.Thread(target=connection.listen, args=(IP_ADDRESS, PORT)).start()
-    threading.Thread(target=connection.send, args=(BROADCAST_ADDRESS,)).start()
-
-    print("Running. Copy text on this device to send it to other devices running this program...")
+async def main():
+    await asyncio.gather(
+        connection.listen(IP_ADDRESS, PORT),
+        connection.send(BROADCAST_ADDRESS)
+    )
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

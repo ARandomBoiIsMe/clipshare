@@ -1,4 +1,5 @@
 import socket
+import asyncio
 import ipaddress
 
 import clip
@@ -39,41 +40,45 @@ def get_broadcast_address(ip_address, subnet_mask):
 
     return broadcast_address
 
-def listen(ip_address, port):
+async def listen(ip_address, port):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65507)
         sock.bind(('0.0.0.0', port))
+        sock.setblocking(False)
 
         print("Ready to receive data...")
 
+        loop = asyncio.get_event_loop()
         while True:
             try:
-                received_data, addr = sock.recvfrom(65507)
+                received_data, addr = await loop.sock_recvfrom(sock, 65507)
 
                 if addr[0] == '127.0.0.1' or addr[0] == ip_address:
                     continue
 
                 message = received_data.decode()
 
-                clip.save_to_clipboard(message)
+                await clip.save_to_clipboard(message)
                 print(f"Received: {message}")
             except OSError as e:
                 print(f"Error receiving data: {e}")
                 continue
 
-def send(broadcast_address):
+async def send(broadcast_address):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65507)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.setblocking(False)
 
         print("Ready to send data...")
 
+        loop = asyncio.get_event_loop()
         while True:
-            message = clip.get_from_clipboard()
+            message = await clip.get_from_clipboard()
 
             data = message.encode()
 
             for port in range(1024, 1035):
-                sock.sendto(data, (broadcast_address, port))
+                await loop.sock_sendto(sock, data, (broadcast_address, port))
 
             print(f"Sent: {message}")

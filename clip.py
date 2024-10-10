@@ -100,8 +100,7 @@ async def __set_most_recent_clipboard_item(sys, item):
         # Linux on PC
         proc = await asyncio.create_subprocess_exec(
             "echo "
-            f"{item}", "|", "xclip",
-            "-sel", "clip",
+            f"{item} | xclip -sel clip",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )

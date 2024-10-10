@@ -112,12 +112,11 @@ async def __set_most_recent_clipboard_item(sys, item):
         # Termux on Android
         proc = await asyncio.create_subprocess_exec(
             "termux-clipboard-set",
-            f"{item}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
 
-        stdout, stderr = await proc.communicate()
+        stdout, stderr = await proc.communicate(input=item.encode())
         if stderr:
             pass
 

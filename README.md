@@ -46,6 +46,12 @@ Make sure you have [python](https://www.python.org/downloads/) installed before 
 pkg install termux-api
 ```
 
+- Install the `which` package:
+
+```
+pkg install which
+```
+
 - Install Python:
 
 ```

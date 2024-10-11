@@ -16,44 +16,49 @@ async def __get_most_recent_clipboard_item():
             stderr=asyncio.subprocess.PIPE
         )
 
-        stdout, stderr = await proc.communicate()
-
+        stdout, _ = await proc.communicate()
         return stdout.decode().strip()
     elif PLATFORM == "linux":
-        # Linux on PC
         proc = await asyncio.create_subprocess_exec(
-            "xclip",
-            "-sel", "clip", "-o",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-
-        stdout, stderr = await proc.communicate()
-
-        if stderr:
-            print("Linux Error")
-            print("=============")
-            print(stderr.decode().strip())
-            print("=============")
-        elif stdout:
-            return stdout.decode().strip()
-
-        # Termux on Android
-        proc = await asyncio.create_subprocess_exec(
+            "which",
             "termux-clipboard-get",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
 
-        stdout, stderr = await proc.communicate()
+        stdout, _ = await proc.communicate()
+        if stdout.decode().strip()[0] == "/":
+            proc = await asyncio.create_subprocess_exec(
+                "termux-clipboard-get",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
 
-        if stderr:
-            print("Android Error")
-            print("=============")
-            print(stderr.decode().strip())
-            print("=============")
-        elif stdout:
+            stdout, _ = await proc.communicate()
             return stdout.decode().strip()
+        else:
+            pass
+
+        proc = await asyncio.create_subprocess_exec(
+            "which",
+            "xclip",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, _ = await proc.communicate()
+        if stdout.decode().strip()[0] == "/":
+            proc = await asyncio.create_subprocess_exec(
+                "xclip",
+                "-sel", "clip", "-o",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, _ = await proc.communicate()
+            return stdout.decode().strip()
+        else:
+            pass
 
         raise ValueError(
             "This program cannot work without xclip or termux available on the target device \
@@ -102,28 +107,44 @@ async def __set_most_recent_clipboard_item(item):
 
         await proc.communicate()
     elif PLATFORM == "linux":
-        # Linux on PC
         proc = await asyncio.create_subprocess_exec(
-            "echo "
-            f"{item} | xclip -sel clip",
+            "which",
+            "termux-clipboard-get",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
 
-        stdout, stderr = await proc.communicate()
-        if stderr:
+        stdout, _ = await proc.communicate()
+        if stdout.decode().strip()[0] == "/":
+            proc = await asyncio.create_subprocess_exec(
+                "termux-clipboard-set",
+                f"{item}",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            return
+        else:
             pass
 
-        # Termux on Android
         proc = await asyncio.create_subprocess_exec(
-            "termux-clipboard-set",
-            f"{item}",
+            "which",
+            "xclip",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
 
-        stdout, stderr = await proc.communicate()
-        if stderr:
+        stdout, _ = await proc.communicate()
+        if stdout.decode().strip()[0] == "/":
+            proc = await asyncio.create_subprocess_exec(
+                "echo "
+                f"{item} | xclip -sel clip",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            return
+        else:
             pass
 
         raise ValueError(

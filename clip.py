@@ -3,11 +3,12 @@ import platform
 
 # To avoid sending back items that were sent from another device
 last_sent_item = None
+PLATFORM = platform.system().lower()
 
 # https://stackoverflow.com/a/62517779
 
-async def __get_most_recent_clipboard_item(sys):
-    if sys == "windows":
+async def __get_most_recent_clipboard_item():
+    if PLATFORM == "windows":
         proc = await asyncio.create_subprocess_exec(
             "powershell",
             "-Command", "Get-Clipboard",
@@ -18,7 +19,7 @@ async def __get_most_recent_clipboard_item(sys):
         stdout, stderr = await proc.communicate()
 
         return stdout.decode().strip()
-    elif sys == "linux":
+    elif PLATFORM == "linux":
         # Linux on PC
         proc = await asyncio.create_subprocess_exec(
             "xclip",
@@ -30,7 +31,10 @@ async def __get_most_recent_clipboard_item(sys):
         stdout, stderr = await proc.communicate()
 
         if stderr:
-            pass
+            print("Linux Error")
+            print("=============")
+            print(stderr.decode().strip())
+            print("=============")
         elif stdout:
             return stdout.decode().strip()
 
@@ -44,7 +48,10 @@ async def __get_most_recent_clipboard_item(sys):
         stdout, stderr = await proc.communicate()
 
         if stderr:
-            pass
+            print("Android Error")
+            print("=============")
+            print(stderr.decode().strip())
+            print("=============")
         elif stdout:
             return stdout.decode().strip()
 
@@ -60,13 +67,13 @@ async def __get_most_recent_clipboard_item(sys):
             https://github.com/ARandomBoiIsMe/clipshare/issues"
         )
 
-async def wait_for_new_clipboard_addition(sys):
+async def wait_for_new_clipboard_addition():
     global last_sent_item
 
-    last_addition = await __get_most_recent_clipboard_item(sys)
+    last_addition = await __get_most_recent_clipboard_item()
 
     while True:
-        current_addition = await __get_most_recent_clipboard_item(sys)
+        current_addition = await __get_most_recent_clipboard_item()
         if current_addition == last_addition:
             await asyncio.sleep(0.5)
             continue
@@ -82,12 +89,10 @@ async def wait_for_new_clipboard_addition(sys):
         return current_addition
 
 async def get_from_clipboard():
-    plat = platform.system().lower()
+    return await wait_for_new_clipboard_addition()
 
-    return await wait_for_new_clipboard_addition(plat)
-
-async def __set_most_recent_clipboard_item(sys, item):
-    if sys == "windows":
+async def __set_most_recent_clipboard_item(item):
+    if PLATFORM == "windows":
         proc = await asyncio.create_subprocess_exec(
             "powershell",
             "Set-Clipboard", "-Value", f"{item}",
@@ -96,7 +101,7 @@ async def __set_most_recent_clipboard_item(sys, item):
         )
 
         await proc.communicate()
-    elif sys == "linux":
+    elif PLATFORM == "linux":
         # Linux on PC
         proc = await asyncio.create_subprocess_exec(
             "echo "
@@ -135,7 +140,6 @@ async def __set_most_recent_clipboard_item(sys, item):
 
 async def save_to_clipboard(item):
     global last_sent_item
-    plat = platform.system().lower()
 
-    await __set_most_recent_clipboard_item(plat, item)
+    await __set_most_recent_clipboard_item(item)
     last_sent_item = item

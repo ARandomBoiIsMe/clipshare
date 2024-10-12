@@ -137,9 +137,9 @@ async def __set_most_recent_clipboard_item(item):
         stdout, _ = await proc.communicate()
         if len(stdout.decode().strip()) > 0 and stdout.decode().strip()[0] == "/":
             proc = await asyncio.create_subprocess_exec(
-                "echo "
-                f"{item} | xclip -sel clip",
-                stdout=asyncio.subprocess.PIPE,
+                "echo",
+		f"{item}", "|", "xclip", "-sel", "clip", "-i",
+		stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
 

@@ -27,7 +27,7 @@ async def __get_most_recent_clipboard_item():
         )
 
         stdout, _ = await proc.communicate()
-        if stdout.decode().strip()[0] == "/":
+        if len(stdout.decode().strip()) > 0 and stdout.decode().strip()[0] == "/":
             proc = await asyncio.create_subprocess_exec(
                 "termux-clipboard-get",
                 stdout=asyncio.subprocess.PIPE,
@@ -47,7 +47,7 @@ async def __get_most_recent_clipboard_item():
         )
 
         stdout, _ = await proc.communicate()
-        if stdout.decode().strip()[0] == "/":
+        if len(stdout.decode().strip()) > 0 and stdout.decode().strip()[0] == "/":
             proc = await asyncio.create_subprocess_exec(
                 "xclip",
                 "-sel", "clip", "-o",
@@ -115,7 +115,7 @@ async def __set_most_recent_clipboard_item(item):
         )
 
         stdout, _ = await proc.communicate()
-        if stdout.decode().strip()[0] == "/":
+        if len(stdout.decode().strip()) > 0 and stdout.decode().strip()[0] == "/":
             proc = await asyncio.create_subprocess_exec(
                 "termux-clipboard-set",
                 f"{item}",
@@ -135,7 +135,7 @@ async def __set_most_recent_clipboard_item(item):
         )
 
         stdout, _ = await proc.communicate()
-        if stdout.decode().strip()[0] == "/":
+        if len(stdout.decode().strip()) > 0 and stdout.decode().strip()[0] == "/":
             proc = await asyncio.create_subprocess_exec(
                 "echo "
                 f"{item} | xclip -sel clip",
